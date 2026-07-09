@@ -30,6 +30,17 @@ def can_manage_inventory(user):
     return get_user_role(user) in (UserRole.ADMIN, UserRole.OPERATIONS)
 
 
+def is_admin_role(user):
+    return get_user_role(user) == UserRole.ADMIN
+
+
+class IsAdminRole(BasePermission):
+    message = "Bu islem icin admin yetkisi gerekir."
+
+    def has_permission(self, request, view):
+        return is_admin_role(request.user)
+
+
 class IsInventoryManager(BasePermission):
     message = "Bu islem icin admin veya idari isler yetkisi gerekir."
 

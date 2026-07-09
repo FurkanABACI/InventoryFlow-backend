@@ -1,9 +1,12 @@
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 
-from accounts.serializers import LoginSerializer, UserSerializer
+from accounts.serializers import LoginSerializer, ManagedUserSerializer, UserSerializer
+from core.permissions import IsAdminRole
 
 
 class LoginView(APIView):
@@ -36,3 +39,9 @@ class LogoutView(APIView):
     def post(self, request):
         request.user.auth_token.delete()
         return Response({"detail": "Cikis yapildi."})
+
+
+class ManagedUserViewSet(ModelViewSet):
+    queryset = User.objects.select_related("profile").order_by("-date_joined")
+    serializer_class = ManagedUserSerializer
+    permission_classes = (IsAdminRole,)
