@@ -45,13 +45,13 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
 
-    'apps.core',
-    'apps.accounts',
-    'apps.catalog',
-    'apps.orders',
-    'apps.receiving',
-    'apps.requisitions',
-    'apps.stock',
+    'core',
+    'accounts',
+    'catalog',
+    'orders',
+    'receiving',
+    'requisitions',
+    'stock',
 ]
 
 MIDDLEWARE = [
