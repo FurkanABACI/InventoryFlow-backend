@@ -33,6 +33,10 @@ class StockRequestItemWriteSerializer(serializers.Serializer):
 
 
 class StockRequestSerializer(BaseModelSerializer):
+    requester_username = serializers.CharField(
+        source="requester_user.username",
+        read_only=True,
+    )
     status_label = serializers.CharField(source="get_status_display", read_only=True)
     items = StockRequestItemReadSerializer(many=True, read_only=True)
     request_items = StockRequestItemWriteSerializer(many=True, write_only=True)
@@ -42,6 +46,8 @@ class StockRequestSerializer(BaseModelSerializer):
     class Meta(BaseModelSerializer.Meta):
         model = StockRequest
         fields = BaseModelSerializer.Meta.fields + (
+            "requester_user",
+            "requester_username",
             "department",
             "requester_name",
             "note",
@@ -54,6 +60,7 @@ class StockRequestSerializer(BaseModelSerializer):
             "can_fulfill",
         )
         read_only_fields = BaseModelSerializer.Meta.read_only_fields + (
+            "requester_user",
             "fulfilled_at",
         )
 

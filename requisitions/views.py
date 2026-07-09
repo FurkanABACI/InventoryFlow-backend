@@ -1,10 +1,13 @@
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from catalog.models import Product
+from core.permissions import can_manage_inventory, get_user_department
 from core.views import BaseModelViewSet
 from requisitions.choices import StockRequestStatus
 from requisitions.models import StockRequest
@@ -14,11 +17,46 @@ from stock.models import StockMovement
 
 
 class StockRequestViewSet(BaseModelViewSet):
-    queryset = StockRequest.objects.prefetch_related("items__product").all()
+    queryset = StockRequest.objects.select_related("requester_user").prefetch_related(
+        "items__product"
+    ).all()
     serializer_class = StockRequestSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if can_manage_inventory(self.request.user):
+            return queryset
+
+        department = get_user_department(self.request.user)
+        own_requests = Q(requester_user=self.request.user)
+
+        if department:
+            own_requests |= Q(department__iexact=department)
+
+        return queryset.filter(own_requests)
+
+    def perform_create(self, serializer):
+        department = get_user_department(self.request.user)
+
+        if not can_manage_inventory(self.request.user) and department:
+            serializer.save(
+                requester_user=self.request.user,
+                department=department,
+            )
+            return
+
+        serializer.save(requester_user=self.request.user)
 
     @action(detail=True, methods=["post"], url_path="fulfill")
     def fulfill(self, request, pk=None):
+        if not can_manage_inventory(request.user):
+            return Response(
+                {"detail": "Bu talebi teslim etmek icin idari isler yetkisi gerekir."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         with transaction.atomic():
             stock_request = (
                 StockRequest.objects.select_for_update()
@@ -91,6 +129,15 @@ class StockRequestViewSet(BaseModelViewSet):
     @action(detail=True, methods=["post"], url_path="cancel")
     def cancel(self, request, pk=None):
         stock_request = self.get_object()
+
+        if (
+            not can_manage_inventory(request.user)
+            and stock_request.requester_user_id != request.user.id
+        ):
+            return Response(
+                {"detail": "Sadece kendi talebinizi iptal edebilirsiniz."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if stock_request.status == StockRequestStatus.FULFILLED:
             return Response(

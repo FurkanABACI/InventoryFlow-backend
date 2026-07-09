@@ -3,8 +3,8 @@ from django.db import migrations, models
 
 
 def create_existing_product_supplier_links(apps, schema_editor):
-    Product = get_model("catalog", "Product")
-    ProductSupplier = get_model("catalog", "ProductSupplier")
+    Product = apps.get_model("catalog", "Product")
+    ProductSupplier = apps.get_model("catalog", "ProductSupplier")
 
     for product in Product.objects.all():
         ProductSupplier.objects.get_or_create(
@@ -41,8 +41,8 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "Product Suppliers",
                 "ordering": ["product__name", "supplier__name"],
                 "indexes": [
-                    models.Index(fields=["product", "is_active"], name="catalog_pro_product_a776ad_idx"),
-                    models.Index(fields=["supplier", "is_active"], name="catalog_pro_supplier_30c36e_idx"),
+                    models.Index(fields=["product", "is_active"], name="cat_ps_product_active_idx"),
+                    models.Index(fields=["supplier", "is_active"], name="cat_ps_supplier_active_idx"),
                 ],
             },
         ),

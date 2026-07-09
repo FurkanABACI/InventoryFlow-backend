@@ -1,3 +1,4 @@
+from core.permissions import IsInventoryManager
 from core.views import BaseModelViewSet
 from receiving.models import GoodsReceipt
 from receiving.serializers import GoodsReceiptSerializer
@@ -8,3 +9,4 @@ class GoodsReceiptViewSet(BaseModelViewSet):
         "items__product",
     )
     serializer_class = GoodsReceiptSerializer
+    permission_classes = (IsInventoryManager,)

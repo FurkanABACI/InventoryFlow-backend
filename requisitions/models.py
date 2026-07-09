@@ -5,6 +5,13 @@ from requisitions.choices import StockRequestStatus
 
 
 class StockRequest(BaseModel):
+    requester_user = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="stock_requests",
+    )
     department = models.CharField(max_length=120, db_index=True)
     requester_name = models.CharField(max_length=120)
     note = models.TextField(blank=True)
@@ -19,6 +26,7 @@ class StockRequest(BaseModel):
     class Meta:
         ordering = ["-created_at"]
         indexes = [
+            models.Index(fields=["requester_user", "created_at"]),
             models.Index(fields=["status", "created_at"]),
             models.Index(fields=["department", "created_at"]),
         ]

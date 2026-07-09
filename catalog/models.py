@@ -99,11 +99,11 @@ class ProductSupplier(BaseModel):
         indexes = [
             models.Index(
                 fields=["product", "is_active"],
-                name="catalog_pro_product_a776ad_idx",
+                name="cat_ps_product_active_idx",
             ),
             models.Index(
                 fields=["supplier", "is_active"],
-                name="catalog_pro_supplier_30c36e_idx",
+                name="cat_ps_supplier_active_idx",
             ),
         ]
 

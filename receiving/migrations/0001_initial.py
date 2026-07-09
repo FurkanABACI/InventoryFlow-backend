@@ -26,8 +26,8 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ["-received_at"],
                 "indexes": [
-                    models.Index(fields=["supplier", "received_at"], name="receiving_g_supplier_6a6c0b_idx"),
-                    models.Index(fields=["received_at", "is_active"], name="receiving_g_receive_43d3e0_idx"),
+                    models.Index(fields=["supplier", "received_at"], name="recv_gr_supplier_date_idx"),
+                    models.Index(fields=["received_at", "is_active"], name="recv_gr_date_active_idx"),
                 ],
             },
         ),

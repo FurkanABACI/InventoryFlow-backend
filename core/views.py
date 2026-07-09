@@ -1,10 +1,10 @@
 from rest_framework.viewsets import ModelViewSet
 
-from core.permissions import IsAdminOrReadOnly
+from core.permissions import IsInventoryManagerOrReadOnly
 
 
 class BaseModelViewSet(ModelViewSet):
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsInventoryManagerOrReadOnly,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
