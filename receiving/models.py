@@ -1,12 +1,11 @@
 from django.db import models
 
-from catalog.models import Product, Supplier
 from core.models import BaseModel
 
 
 class GoodsReceipt(BaseModel):
     supplier = models.ForeignKey(
-        Supplier,
+        "catalog.Supplier",
         on_delete=models.PROTECT,
         related_name="goods_receipts",
     )
@@ -17,8 +16,14 @@ class GoodsReceipt(BaseModel):
     class Meta:
         ordering = ["-received_at"]
         indexes = [
-            models.Index(fields=["supplier", "received_at"]),
-            models.Index(fields=["received_at", "is_active"]),
+            models.Index(
+                fields=["supplier", "received_at"],
+                name="receiving_g_supplier_6a6c0b_idx",
+            ),
+            models.Index(
+                fields=["received_at", "is_active"],
+                name="receiving_g_receive_43d3e0_idx",
+            ),
         ]
 
     def __str__(self):
@@ -27,12 +32,12 @@ class GoodsReceipt(BaseModel):
 
 class GoodsReceiptItem(BaseModel):
     receipt = models.ForeignKey(
-        GoodsReceipt,
+        "receiving.GoodsReceipt",
         on_delete=models.CASCADE,
         related_name="items",
     )
     product = models.ForeignKey(
-        Product,
+        "catalog.Product",
         on_delete=models.PROTECT,
         related_name="goods_receipt_items",
     )

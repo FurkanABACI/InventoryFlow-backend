@@ -6,8 +6,10 @@ from rest_framework.response import Response
 
 from catalog.models import Product
 from core.views import BaseModelViewSet
+from requisitions.choices import StockRequestStatus
 from requisitions.models import StockRequest
 from requisitions.serializers import StockRequestSerializer
+from stock.choices import StockMovementType
 from stock.models import StockMovement
 
 
@@ -24,13 +26,13 @@ class StockRequestViewSet(BaseModelViewSet):
                 .get(pk=self.get_object().pk)
             )
 
-            if stock_request.status == StockRequest.Status.FULFILLED:
+            if stock_request.status == StockRequestStatus.FULFILLED:
                 return Response(
                     {"detail": "Bu talep zaten teslim edilmis."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            if stock_request.status == StockRequest.Status.CANCELLED:
+            if stock_request.status == StockRequestStatus.CANCELLED:
                 return Response(
                     {"detail": "Iptal edilen talep teslim edilemez."},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -52,7 +54,7 @@ class StockRequestViewSet(BaseModelViewSet):
                     )
 
             if shortages:
-                stock_request.status = StockRequest.Status.PURCHASE_NEEDED
+                stock_request.status = StockRequestStatus.PURCHASE_NEEDED
                 stock_request.save(update_fields=["status", "updated_at"])
                 serializer = self.get_serializer(stock_request)
                 return Response(
@@ -72,14 +74,14 @@ class StockRequestViewSet(BaseModelViewSet):
                 item.save(update_fields=["delivered_quantity", "updated_at"])
                 StockMovement.objects.create(
                     product=product,
-                    movement_type=StockMovement.MovementType.OUT,
+                    movement_type=StockMovementType.OUT,
                     quantity=item.quantity,
                     source_type="stock_request",
                     source_id=stock_request.id,
                     note=f"{stock_request.department} talebi teslim edildi",
                 )
 
-            stock_request.status = StockRequest.Status.FULFILLED
+            stock_request.status = StockRequestStatus.FULFILLED
             stock_request.fulfilled_at = timezone.now()
             stock_request.save(update_fields=["status", "fulfilled_at", "updated_at"])
 
@@ -90,13 +92,13 @@ class StockRequestViewSet(BaseModelViewSet):
     def cancel(self, request, pk=None):
         stock_request = self.get_object()
 
-        if stock_request.status == StockRequest.Status.FULFILLED:
+        if stock_request.status == StockRequestStatus.FULFILLED:
             return Response(
                 {"detail": "Teslim edilen talep iptal edilemez."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        stock_request.status = StockRequest.Status.CANCELLED
+        stock_request.status = StockRequestStatus.CANCELLED
         stock_request.save(update_fields=["status", "updated_at"])
         serializer = self.get_serializer(stock_request)
         return Response(serializer.data)

@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from catalog.models import Product
 from core.serializers import BaseModelSerializer
+from requisitions.choices import StockRequestStatus
 from requisitions.models import StockRequest, StockRequestItem
 
 
@@ -60,7 +61,7 @@ class StockRequestSerializer(BaseModelSerializer):
         return sum(item.quantity for item in obj.items.all())
 
     def get_can_fulfill(self, obj):
-        if obj.status != StockRequest.Status.PENDING:
+        if obj.status != StockRequestStatus.PENDING:
             return False
 
         return all(item.product.stock >= item.quantity for item in obj.items.all())
@@ -89,4 +90,3 @@ class StockRequestSerializer(BaseModelSerializer):
 
 class StockRequestFulfillmentSerializer(serializers.Serializer):
     detail = serializers.CharField(read_only=True)
-

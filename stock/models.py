@@ -1,22 +1,18 @@
 from django.db import models
 
-from catalog.models import Product
 from core.models import BaseModel
+from stock.choices import StockMovementType
 
 
 class StockMovement(BaseModel):
-    class MovementType(models.TextChoices):
-        IN = "in", "Giriş"
-        OUT = "out", "Çıkış"
-
     product = models.ForeignKey(
-        Product,
+        "catalog.Product",
         on_delete=models.PROTECT,
         related_name="stock_movements",
     )
     movement_type = models.CharField(
         max_length=10,
-        choices=MovementType.choices,
+        choices=StockMovementType.choices,
         db_index=True,
     )
     quantity = models.PositiveIntegerField()
@@ -40,4 +36,3 @@ class StockMovement(BaseModel):
 
     def __str__(self):
         return f"{self.product.name} - {self.get_movement_type_display()} x {self.quantity}"
-

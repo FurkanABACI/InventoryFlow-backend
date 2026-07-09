@@ -37,12 +37,12 @@ class Product(BaseModel):
     name = models.CharField(max_length=255, db_index=True)
     sku = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(
-        Category,
+        "catalog.Category",
         on_delete=models.PROTECT,
         related_name="products",
     )
     supplier = models.ForeignKey(
-        Supplier,
+        "catalog.Supplier",
         on_delete=models.PROTECT,
         related_name="products",
     )
@@ -69,12 +69,12 @@ class Product(BaseModel):
 
 class ProductSupplier(BaseModel):
     product = models.ForeignKey(
-        Product,
+        "catalog.Product",
         on_delete=models.CASCADE,
         related_name="supplier_links",
     )
     supplier = models.ForeignKey(
-        Supplier,
+        "catalog.Supplier",
         on_delete=models.CASCADE,
         related_name="product_links",
     )
@@ -97,8 +97,14 @@ class ProductSupplier(BaseModel):
             ),
         ]
         indexes = [
-            models.Index(fields=["product", "is_active"]),
-            models.Index(fields=["supplier", "is_active"]),
+            models.Index(
+                fields=["product", "is_active"],
+                name="catalog_pro_product_a776ad_idx",
+            ),
+            models.Index(
+                fields=["supplier", "is_active"],
+                name="catalog_pro_supplier_30c36e_idx",
+            ),
         ]
 
     def __str__(self):

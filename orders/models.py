@@ -1,6 +1,5 @@
 from django.db import models
 
-from catalog.models import Product
 from core.models import BaseModel
 
 
@@ -20,12 +19,12 @@ class Order(BaseModel):
 
 class OrderItem(BaseModel):
     order = models.ForeignKey(
-        Order,
+        "orders.Order",
         on_delete=models.CASCADE,
         related_name="items",
     )
     product = models.ForeignKey(
-        Product,
+        "catalog.Product",
         on_delete=models.PROTECT,
         related_name="order_items",
     )

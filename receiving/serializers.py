@@ -4,6 +4,7 @@ from rest_framework import serializers
 from catalog.models import Product, ProductSupplier, Supplier
 from core.serializers import BaseModelSerializer
 from receiving.models import GoodsReceipt, GoodsReceiptItem
+from stock.choices import StockMovementType
 from stock.models import StockMovement
 
 
@@ -101,7 +102,7 @@ class GoodsReceiptSerializer(BaseModelSerializer):
 
                 StockMovement.objects.create(
                     product=product,
-                    movement_type=StockMovement.MovementType.IN,
+                    movement_type=StockMovementType.IN,
                     quantity=quantity,
                     unit_cost=item["unit_cost"],
                     source_type="goods_receipt",
