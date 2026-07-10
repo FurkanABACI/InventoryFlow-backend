@@ -76,6 +76,29 @@ class StockRequestViewSet(BaseModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            uncataloged_items = [
+                {
+                    "item": item.id,
+                    "requested_product_name": item.requested_product_name,
+                    "requested": item.quantity,
+                }
+                for item in stock_request.items.all()
+                if not item.product_id
+            ]
+
+            if uncataloged_items:
+                stock_request.status = StockRequestStatus.PURCHASE_NEEDED
+                stock_request.save(update_fields=["status", "updated_at"])
+                serializer = self.get_serializer(stock_request)
+                return Response(
+                    {
+                        "detail": "Bu talepte urun karti olmayan kalemler var. Once urun ve tedarik sureci tamamlanmalidir.",
+                        "uncataloged_items": uncataloged_items,
+                        "request": serializer.data,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             shortages = []
 
             for item in stock_request.items.all():

@@ -44,8 +44,12 @@ class StockRequestItem(BaseModel):
     product = models.ForeignKey(
         "catalog.Product",
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name="stock_request_items",
     )
+    requested_product_name = models.CharField(max_length=255, blank=True)
+    requested_product_note = models.TextField(blank=True)
     quantity = models.PositiveIntegerField()
     delivered_quantity = models.PositiveIntegerField(default=0)
 
@@ -53,4 +57,5 @@ class StockRequestItem(BaseModel):
         ordering = ["id"]
 
     def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+        product_name = self.product.name if self.product else self.requested_product_name
+        return f"{product_name} x {self.quantity}"

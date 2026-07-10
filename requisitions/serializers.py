@@ -9,9 +9,10 @@ from requisitions.models import StockRequest, StockRequestItem
 
 
 class StockRequestItemReadSerializer(BaseModelSerializer):
-    product_name = serializers.CharField(source="product.name", read_only=True)
-    sku = serializers.CharField(source="product.sku", read_only=True)
-    current_stock = serializers.IntegerField(source="product.stock", read_only=True)
+    product_name = serializers.SerializerMethodField()
+    sku = serializers.SerializerMethodField()
+    current_stock = serializers.SerializerMethodField()
+    has_product_card = serializers.SerializerMethodField()
 
     class Meta(BaseModelSerializer.Meta):
         model = StockRequestItem
@@ -20,16 +21,61 @@ class StockRequestItemReadSerializer(BaseModelSerializer):
             "product_name",
             "sku",
             "current_stock",
+            "has_product_card",
+            "requested_product_name",
+            "requested_product_note",
             "quantity",
             "delivered_quantity",
         )
 
+    def get_product_name(self, obj):
+        if obj.product:
+            return obj.product.name
+
+        return obj.requested_product_name
+
+    def get_sku(self, obj):
+        if obj.product:
+            return obj.product.sku
+
+        return "Ürün kartı yok"
+
+    def get_current_stock(self, obj):
+        if obj.product:
+            return obj.product.stock
+
+        return None
+
+    def get_has_product_card(self, obj):
+        return bool(obj.product_id)
+
 
 class StockRequestItemWriteSerializer(serializers.Serializer):
     product = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.filter(is_active=True)
+        queryset=Product.objects.filter(is_active=True),
+        required=False,
+        allow_null=True,
     )
+    requested_product_name = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=255,
+    )
+    requested_product_note = serializers.CharField(required=False, allow_blank=True)
     quantity = serializers.IntegerField(min_value=1)
+
+    def validate(self, attrs):
+        product = attrs.get("product")
+        requested_product_name = attrs.get("requested_product_name", "").strip()
+
+        if not product and not requested_product_name:
+            raise serializers.ValidationError(
+                "Urun secilmeli veya listede olmayan urun adi yazilmalidir."
+            )
+
+        attrs["requested_product_name"] = requested_product_name
+        attrs["requested_product_note"] = attrs.get("requested_product_note", "").strip()
+        return attrs
 
 
 class StockRequestSerializer(BaseModelSerializer):
@@ -71,7 +117,10 @@ class StockRequestSerializer(BaseModelSerializer):
         if obj.status != StockRequestStatus.PENDING:
             return False
 
-        return all(item.product.stock >= item.quantity for item in obj.items.all())
+        return all(
+            item.product and item.product.stock >= item.quantity
+            for item in obj.items.all()
+        )
 
     def validate_request_items(self, value):
         if not value:
@@ -88,7 +137,9 @@ class StockRequestSerializer(BaseModelSerializer):
             for item in request_items:
                 StockRequestItem.objects.create(
                     request=stock_request,
-                    product=item["product"],
+                    product=item.get("product"),
+                    requested_product_name=item.get("requested_product_name", ""),
+                    requested_product_note=item.get("requested_product_note", ""),
                     quantity=item["quantity"],
                 )
 
