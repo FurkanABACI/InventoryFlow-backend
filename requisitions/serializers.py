@@ -114,7 +114,12 @@ class StockRequestSerializer(BaseModelSerializer):
         return sum(item.quantity for item in obj.items.all())
 
     def get_can_fulfill(self, obj):
-        if obj.status != StockRequestStatus.PENDING:
+        fulfillable_statuses = [
+            StockRequestStatus.PENDING,
+            StockRequestStatus.PURCHASE_NEEDED,
+        ]
+
+        if obj.status not in fulfillable_statuses:
             return False
 
         return all(

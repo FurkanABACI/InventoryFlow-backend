@@ -10,7 +10,7 @@ from catalog.models import Product
 from core.permissions import can_manage_inventory, get_user_department
 from core.views import BaseModelViewSet
 from requisitions.choices import StockRequestStatus
-from requisitions.models import StockRequest
+from requisitions.models import StockRequest, StockRequestItem
 from requisitions.serializers import StockRequestSerializer
 from stock.choices import StockMovementType
 from stock.models import StockMovement
@@ -145,6 +145,79 @@ class StockRequestViewSet(BaseModelViewSet):
             stock_request.status = StockRequestStatus.FULFILLED
             stock_request.fulfilled_at = timezone.now()
             stock_request.save(update_fields=["status", "fulfilled_at", "updated_at"])
+
+        serializer = self.get_serializer(stock_request)
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path=r"items/(?P<item_pk>[^/.]+)/link-product",
+    )
+    def link_item_product(self, request, pk=None, item_pk=None):
+        if not can_manage_inventory(request.user):
+            return Response(
+                {"detail": "Talep kalemini urune baglamak icin idari isler yetkisi gerekir."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        product_id = request.data.get("product")
+
+        if not product_id:
+            return Response(
+                {"detail": "Baglanacak urun secilmelidir."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            stock_request = StockRequest.objects.select_for_update().get(
+                pk=self.get_object().pk
+            )
+
+            if stock_request.status == StockRequestStatus.FULFILLED:
+                return Response(
+                    {"detail": "Teslim edilen talep degistirilemez."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if stock_request.status == StockRequestStatus.CANCELLED:
+                return Response(
+                    {"detail": "Iptal edilen talep degistirilemez."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                request_item = StockRequestItem.objects.select_for_update().get(
+                    pk=item_pk,
+                    request=stock_request,
+                )
+            except StockRequestItem.DoesNotExist:
+                return Response(
+                    {"detail": "Talep kalemi bulunamadi."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            try:
+                product = Product.objects.get(pk=product_id, is_active=True)
+            except Product.DoesNotExist:
+                return Response(
+                    {"detail": "Aktif urun karti bulunamadi."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            request_item.product = product
+            request_item.save(update_fields=["product", "updated_at"])
+
+            request_items = list(stock_request.items.select_related("product").all())
+            has_uncataloged_item = any(not item.product_id for item in request_items)
+            has_shortage = any(
+                item.product_id and item.product.stock < item.quantity
+                for item in request_items
+            )
+
+            if not has_uncataloged_item and not has_shortage:
+                stock_request.status = StockRequestStatus.PENDING
+                stock_request.save(update_fields=["status", "updated_at"])
 
         serializer = self.get_serializer(stock_request)
         return Response(serializer.data)
