@@ -14,7 +14,7 @@ InventoryFlow backend, şirket içi stok, tedarikçi, mal kabul ve talep süreç
 
 ## Ana Modüller
 
-- `core`: BaseModel, BaseSerializer, BaseViewSet, permission yardımcıları
+- `core`: audit alanları, soft delete, restore, BaseSerializer, BaseViewSet, BaseFilterSet ve permission yardımcıları
 - `accounts`: kullanıcı profili, roller ve admin kullanıcı yönetimi
 - `catalog`: kategori, tedarikçi, ürün ve ürün-tedarikçi ilişkileri
 - `receiving`: mal kabul ve stok girişi
@@ -37,6 +37,19 @@ InventoryFlow backend, şirket içi stok, tedarikçi, mal kabul ve talep süreç
 5. Ürün kartı olmayan talep kalemi `link-product` action ile ürün kartına bağlanır.
 6. Stok yeterliyse `fulfill` action ile teslim edilir.
 7. Ürün stoğu düşer ve `StockMovement` kaydı oluşur.
+
+## Base Yapılar
+
+Projede tekrar eden davranışlar `core` app içinde merkezileştirilmiştir.
+
+- `BaseModel`: `created_at`, `updated_at`, `is_active`, `created_by`, `updated_by` alanlarını sağlar.
+- `BaseModel.deactivate()`: kaydı veritabanından silmeden pasife alır.
+- `BaseModel.activate()`: pasif kaydı tekrar aktif eder.
+- `BaseModelSerializer`: audit alanlarını ve kullanıcı adlarını standart API çıktısına ekler.
+- `BaseModelViewSet`: aktif kayıt filtresi, soft delete, restore action, `created_by` ve `updated_by` otomatik atama davranışlarını yönetir.
+- `BaseFilterSet`: `is_active`, tarih aralığı ve ortak `search` filtrelerini sağlar.
+
+Bu yapı sayesinde ürün, tedarikçi, kategori, talep ve mal kabul gibi farklı app'lerde aynı davranış tekrar tekrar yazılmaz.
 
 ## Kurulum
 

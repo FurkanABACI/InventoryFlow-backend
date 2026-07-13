@@ -6,23 +6,46 @@ from core.filters import BaseFilterSet
 
 
 class CategoryFilter(BaseFilterSet):
+    search_fields = ("name", "description")
+
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
 
     class Meta:
         model = Category
-        fields = ("name", "is_active")
+        fields = (
+            "name",
+            "is_active",
+            "created_after",
+            "created_before",
+            "updated_after",
+            "updated_before",
+            "search",
+        )
 
 
 class SupplierFilter(BaseFilterSet):
+    search_fields = ("name", "sector", "email", "phone", "address", "note")
+
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
     email = django_filters.CharFilter(field_name="email", lookup_expr="icontains")
 
     class Meta:
         model = Supplier
-        fields = ("name", "email", "is_active")
+        fields = (
+            "name",
+            "email",
+            "is_active",
+            "created_after",
+            "created_before",
+            "updated_after",
+            "updated_before",
+            "search",
+        )
 
 
 class ProductFilter(BaseFilterSet):
+    search_fields = ("name", "sku", "category__name", "supplier__name")
+
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
     sku = django_filters.CharFilter(field_name="sku", lookup_expr="icontains")
     category = django_filters.NumberFilter(field_name="category_id")
@@ -46,6 +69,11 @@ class ProductFilter(BaseFilterSet):
             "price_max",
             "is_active",
             "is_low_stock",
+            "created_after",
+            "created_before",
+            "updated_after",
+            "updated_before",
+            "search",
         )
 
     def filter_is_low_stock(self, queryset, name, value):

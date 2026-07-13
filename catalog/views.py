@@ -53,8 +53,7 @@ class ProductViewSet(BaseModelViewSet):
     @action(detail=True, methods=["post"], url_path="deactivate")
     def deactivate(self, request, pk=None):
         product = self.get_object()
-        product.is_active = False
-        product.save(update_fields=["is_active", "updated_at"])
+        product.deactivate(user=request.user)
         serializer = self.get_serializer(product)
         return Response(serializer.data)
 

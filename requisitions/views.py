@@ -44,10 +44,16 @@ class StockRequestViewSet(BaseModelViewSet):
             serializer.save(
                 requester_user=self.request.user,
                 department=department,
+                created_by=self.request.user,
+                updated_by=self.request.user,
             )
             return
 
-        serializer.save(requester_user=self.request.user)
+        serializer.save(
+            requester_user=self.request.user,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
 
     @action(detail=True, methods=["post"], url_path="fulfill")
     def fulfill(self, request, pk=None):
