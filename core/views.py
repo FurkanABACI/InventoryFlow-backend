@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from core.permissions import can_manage_inventory
 from core.permissions import IsInventoryManagerOrReadOnly
 
-
 class BaseModelViewSet(ModelViewSet):
     permission_classes = (IsInventoryManagerOrReadOnly,)
 
