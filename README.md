@@ -38,6 +38,15 @@ InventoryFlow backend, şirket içi stok, tedarikçi, mal kabul ve talep süreç
 6. Stok yeterliyse `fulfill` action ile teslim edilir.
 7. Ürün stoğu düşer ve `StockMovement` kaydı oluşur.
 
+## İş Kuralları
+
+- Ürün kartı oluşturmak stoğu artırmaz; stok girişi `receiving` app içindeki mal kabul akışıyla yapılır.
+- Mal kabul kaydedildiğinde `GoodsReceipt`, `GoodsReceiptItem`, `Product.stock` ve `StockMovement` birlikte güncellenir.
+- Bu stok girişi `transaction.atomic()` içinde yapılır; işlem yarım kalırsa tüm kayıtlar geri alınır.
+- Ürün stok güncellemesinde `select_for_update()` kullanılarak eş zamanlı stok girişlerinde veri tutarlılığı korunur.
+- Talep tesliminde stok yeterliyse ürün stoğu düşer ve `StockMovement` çıkış kaydı oluşur.
+- Admin kullanıcı, personel hesaplarını aktif/pasif duruma alabilir.
+
 ## Base Yapılar
 
 Projede tekrar eden davranışlar `core` app içinde merkezileştirilmiştir.
@@ -116,13 +125,19 @@ docker compose exec api python manage.py createsuperuser
 python manage.py test
 ```
 
-Özellikle `requisitions/tests.py`, ürün kartı olmayan talep, ürün kartına bağlama ve stoktan teslim akışını test eder.
+Test kapsamı:
+
+- `catalog/tests.py`: base viewset davranışı, audit alanları, soft delete ve restore akışı
+- `receiving/tests.py`: mal kabul ile stok artırma, stok hareketi oluşturma ve yetki kontrolü
+- `requisitions/tests.py`: ürün kartı olmayan talep, ürün kartına bağlama ve stoktan teslim akışı
+- `accounts/tests.py`: admin kullanıcı yönetimi, pasif kullanıcıyı aktifleştirme ve yetki kontrolü
 
 ## Önemli Endpointler
 
 - `POST /api/auth/login/`
 - `POST /api/auth/logout/`
 - `GET /api/auth/me/`
+- `GET/POST/PATCH /api/auth/users/`
 - `GET/POST /api/products/`
 - `GET/POST /api/suppliers/`
 - `GET/POST /api/goods-receipts/`
