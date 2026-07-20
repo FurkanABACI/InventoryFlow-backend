@@ -63,6 +63,16 @@ class ProductSupplierSerializer(BaseModelSerializer):
 
 
 class ProductSerializer(BaseModelSerializer):
+    price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        error_messages={
+            "max_digits": "Fiyat en fazla 10 haneli olabilir.",
+            "max_decimal_places": "Fiyat en fazla 2 ondalık basamak içerebilir. Örnek: 125.50",
+            "max_whole_digits": "Fiyatın tam sayı kısmı en fazla 8 haneli olabilir.",
+            "invalid": "Fiyat alanına geçerli bir sayı yaz.",
+        },
+    )
     category_name = serializers.CharField(source="category.name", read_only=True)
     supplier_name = serializers.CharField(source="supplier.name", read_only=True)
     supplier_links = ProductSupplierSerializer(many=True, read_only=True)

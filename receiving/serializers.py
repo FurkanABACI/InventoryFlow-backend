@@ -28,7 +28,17 @@ class GoodsReceiptItemWriteSerializer(serializers.Serializer):
         queryset=Product.objects.select_related("supplier").filter(is_active=True)
     )
     quantity = serializers.IntegerField(min_value=1)
-    unit_cost = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0)
+    unit_cost = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+        error_messages={
+            "max_digits": "Birim maliyet en fazla 10 haneli olabilir.",
+            "max_decimal_places": "Birim maliyet en fazla 2 ondalık basamak içerebilir. Örnek: 125.50",
+            "max_whole_digits": "Birim maliyetin tam sayı kısmı en fazla 8 haneli olabilir.",
+            "invalid": "Birim maliyet alanına geçerli bir sayı yaz.",
+        },
+    )
 
 
 class GoodsReceiptSerializer(BaseModelSerializer):
