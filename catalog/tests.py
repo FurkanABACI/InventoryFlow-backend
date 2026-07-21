@@ -73,3 +73,20 @@ class BaseViewSetBehaviorTests(APITestCase):
         self.assertEqual(restore_response.status_code, status.HTTP_200_OK)
         product.refresh_from_db()
         self.assertTrue(product.is_active)
+
+
+    def test_product_viewset_generates_next_product_code(self):
+        Product.objects.create(
+            name="MSI Keyboard",
+            sku="PRD-0001",
+            category=self.category,
+            supplier=self.supplier,
+            price=1200,
+            stock=3,
+            low_stock_threshold=1,
+        )
+
+        response = self.client.get("/api/products/generate-code/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["code"], "PRD-0002")

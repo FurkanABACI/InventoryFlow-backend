@@ -42,6 +42,18 @@ class ProductViewSet(BaseModelViewSet):
     serializer_class = ProductSerializer
     filterset_class = ProductFilter
 
+    @action(detail=False, methods=["get"], url_path="generate-code")
+    def generate_code(self, request):
+        latest_product = Product.objects.order_by("-id").first()
+        next_number = (latest_product.id if latest_product else 0) + 1
+        code = f"PRD-{next_number:04d}"
+
+        while Product.objects.filter(sku=code).exists():
+            next_number += 1
+            code = f"PRD-{next_number:04d}"
+
+        return Response({"code": code})
+
     @action(detail=False, methods=["get"], url_path="low-stock")
     def low_stock(self, request):
         queryset = self.filter_queryset(

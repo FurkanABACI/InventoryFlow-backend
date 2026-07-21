@@ -41,6 +41,7 @@ InventoryFlow backend, şirket içi stok, tedarikçi, mal kabul ve talep süreç
 ## İş Kuralları
 
 - Ürün kartı oluşturmak stoğu artırmaz; stok girişi `receiving` app içindeki mal kabul akışıyla yapılır.
+- Ürün kartı için otomatik `PRD-0001` formatında ürün kodu üretilebilir. Bu işlem `/api/products/generate-code/` action endpointiyle backend tarafında yapılır.
 - Mal kabul kaydedildiğinde `GoodsReceipt`, `GoodsReceiptItem`, `Product.stock` ve `StockMovement` birlikte güncellenir.
 - Bu stok girişi `transaction.atomic()` içinde yapılır; işlem yarım kalırsa tüm kayıtlar geri alınır.
 - Ürün stok güncellemesinde `select_for_update()` kullanılarak eş zamanlı stok girişlerinde veri tutarlılığı korunur.
@@ -127,7 +128,7 @@ python manage.py test
 
 Test kapsamı:
 
-- `catalog/tests.py`: base viewset davranışı, audit alanları, soft delete ve restore akışı
+- `catalog/tests.py`: base viewset davranışı, audit alanları, soft delete, restore akışı ve ürün kodu üretme action testi
 - `receiving/tests.py`: mal kabul ile stok artırma, stok hareketi oluşturma ve yetki kontrolü
 - `requisitions/tests.py`: ürün kartı olmayan talep, ürün kartına bağlama ve stoktan teslim akışı
 - `accounts/tests.py`: admin kullanıcı yönetimi, pasif kullanıcıyı aktifleştirme ve yetki kontrolü
@@ -139,6 +140,7 @@ Test kapsamı:
 - `GET /api/auth/me/`
 - `GET/POST/PATCH /api/auth/users/`
 - `GET/POST /api/products/`
+- `GET /api/products/generate-code/`
 - `GET/POST /api/suppliers/`
 - `GET/POST /api/goods-receipts/`
 - `GET/POST /api/stock-requests/`
